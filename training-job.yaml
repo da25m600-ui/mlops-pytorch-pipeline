@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ml-training-job
+  namespace: ml-training
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        job-name: ml-training-job
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        accelerator: nvidia-gpu
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: trainer
+          image: mlops-train:v1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TRAINING_CONFIG_PATH
+              value: "/app/configs/training_config.yaml"
+          resources:
+            requests:
+              cpu: "2"
+              memory: "4Gi"
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/configs
+            - name: storage-volume
+              mountPath: /app/data
+              subPath: data
+            - name: storage-volume
+              mountPath: /app/checkpoints
+              subPath: checkpoints
+      volumes:
+        - name: config-volume
+          configMap:
+            name: training-config
+        - name: storage-volume
+          persistentVolumeClaim:
+            claimName: ml-storage-pvc
