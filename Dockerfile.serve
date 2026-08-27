@@ -1,0 +1,26 @@
+FROM python:3.11-slim AS runtime
+
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1
+
+# Create non-root application user
+RUN useradd -u 8888 -m appuser && \
+    mkdir -p /app/checkpoints && \
+    chown -R appuser:appuser /app
+
+USER appuser
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+# Install inference-only requirements
+COPY --chown=appuser:appuser requirements/serve.txt .
+RUN pip install --no-cache-dir --user -r serve.txt
+
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser configs/ ./configs/
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["uvicorn", "src.serve:app", "--host", "0.0.0.0", "--port", "8080"]
