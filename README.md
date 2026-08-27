@@ -1,4 +1,57 @@
 # mlops-pytorch-pipeline
+# Repository Creation
+Repository created mlops-pytorch-pipeline
+
+The project directory is initialised with the following structure: 
+
+mlops-pytorch-pipeline/ 
+
+··· README.md 
+
+··· src/ 
+
+· ··· train.py 
+
+· ··· model.py 
+
+· ··· dataset.py 
+
+· ··· serve.py 
+
+··· configs/
+
+· ··· training_config.yaml
+
+··· docker/
+
+· ··· Dockerfile.train 
+
+· ··· Dockerfile.serve 
+
+··· k8s/ 
+
+· ··· namespace.yaml 
+
+· ··· training-job.yaml 
+
+· ··· serving-deployment.yaml 
+
+· ··· serving-service.yaml 
+
+· ··· configmap.yaml 
+
+· ··· hpa.yaml 
+
+··· requirements/ 
+
+· ··· train.txt 
+
+· ··· serve.txt 
+
+All files are merged to 'main' branch via pull requests.
+
+
+# Docker Results
 
 **Docker build docker train**
 
@@ -94,5 +147,352 @@ INFO: Started server process [1]
 INFO: Waiting for application startup.
 /app/src/serve.py:34: FutureWarning: You are using torch.load with weights_only=False (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for weights_only will be flipped to True. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via torch.serialization.add_safe_globals. We recommend you start setting weights_only=True for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
 model.load_state_dict(torch.load("/app/checkpoints/best_model.pth", map_location=device))
+
 INFO: Application startup complete.
+
 INFO: Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+
+
+# k8s Results
+
+**Namespace**
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl apply -f k8s/namespace.yaml
+
+namespace/ml-training created
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl describe namespace ml-training
+
+Name:         ml-training
+Labels:       framework=pytorch
+              kubernetes.io/metadata.name=ml-training
+              project=mlops-pytorch-pipeline
+              type=pipeline
+Annotations:  <none>
+Status:       Active
+
+No resource quota.
+
+No LimitRange resource.
+
+
+**Configmap**
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl apply -f k8s/configmap.yaml   
+
+configmap/training-config created
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl describe configmap -n ml-training
+
+Name:         kube-root-ca.crt
+Namespace:    ml-training
+Labels:       <none>
+Annotations:  kubernetes.io/description:
+                Contains a CA bundle that can be used to verify the kube-apiserver when using internal endpoints such as the internal service IP or kubern...
+
+Data
+====
+ca.crt:
+----
+-----BEGIN CERTIFICATE-----
+MIIDBTCCAe2gAwIBAgIIAmCN+qDBBhwwDQYJKoZIhvcNAQELBQAwFTETMBEGA1UE
+AxMKa3ViZXJuZXRlczAeFw0yNjA4MjYxMDUwMjhaFw0zNjA4MjMxMDU1MjhaMBUx
+EzARBgNVBAMTCmt1YmVybmV0ZXMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+AoIBAQDVxfd9jsDu4n8zwMpkqhkl2vMacWs0l+DfS/H8rSoVHQePrkPShSh+tMPL
+TPwiLl/tXv85KQ9XX3YAAGG4NVGjb54WwoP2BR6+afafPVrRJrjvexFSiJ9kw6cu
+K908Y4b4AEBapJqoqL5CvWQmzYbI4Ce3NzBXZAnpIBx6MHUPlumFid4c8ca7w5qu
+eZaUXbRMSCYVkVEeFZ5yJg24N5stAyh83C3kZU1OalnfU2Zf+/qUnlUYI3lufAmn
+vytpJxeLcZPkLMGisriSkZ2vDoXr6WDNMgWHR1QP+D8rCXXCUHYb/eECDBj2runN
+8YbmEwzpZJjzl1CmYYCvVoxW9GKfAgMBAAGjWTBXMA4GA1UdDwEB/wQEAwICpDAP
+BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRFZ/O72lhsqvuYnqz/XBMSorgflDAV
+BgNVHREEDjAMggprdWJlcm5ldGVzMA0GCSqGSIb3DQEBCwUAA4IBAQC0IUHjCK1v
+X7YBXIV8u4Y4Xaa5vaVGAjJNNFjmcTY8q6Yr6DvIyC4ncqrQUdqOg2hXtsGo1fYJ
+yUsgkP377k1hnNjipyjzHuVLSlOqVyBs8ofBSVZ2gt+Lod449JYlxgYfL8s1HKRN
+NkbFLTi0Rjqf2a4npGIl0O1QOPiCPPJnTK+dVp/DUd5FUBgopYUJURuaUDh510pI
+pPQ2pC/BZ+hqz0qZn49lc3yCRMKtWZNhumTZe4pQ5aieiDpbtGZh5PtmNSXLGd+4
+UODFcUNd3APkj+ddDxTvDT2bAWiFxvypCqEiRN7QpPdqyoWe2vBCR81rRmMvZARe
+wGBSKguhMyv2
+-----END CERTIFICATE-----
+
+
+
+BinaryData
+====
+
+
+
+Name:         training-config
+Namespace:    ml-training
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+training_config.yaml:
+----
+model:
+  architecture: resnet18
+  num_classes: "10"
+training:
+  epochs: "10"
+  batch_size: "64"
+  learning_rate: "0.001"
+  early_stopping_patience: "3"
+data:
+  dataset: cifar10
+  data_dir: /app/data
+output:
+  checkpoint_dir: /app/checkpoints
+  model_name: classifier_v1.pt
+
+
+
+BinaryData
+====
+
+
+**k8s Training**
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl apply -f k8s/training-job.yaml
+
+job.batch/ml-training-job created
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl describe job -n ml-training      
+
+Name:             ml-training-job
+Namespace:        ml-training
+Selector:         batch.kubernetes.io/controller-uid=8741b430-4611-4dfa-b620-d6d361d82238
+Labels:           batch.kubernetes.io/controller-uid=8741b430-4611-4dfa-b620-d6d361d82238
+                  batch.kubernetes.io/job-name=ml-training-job
+                  controller-uid=8741b430-4611-4dfa-b620-d6d361d82238
+                  job-name=ml-training-job
+Annotations:      <none>
+Parallelism:      1
+Completions:      1
+Completion Mode:  NonIndexed
+Suspend:          false
+Backoff Limit:    2
+Start Time:       Wed, 26 Aug 2026 18:48:18 +0530
+Pods Statuses:    1 Active (0 Ready) / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:  batch.kubernetes.io/controller-uid=8741b430-4611-4dfa-b620-d6d361d82238
+           batch.kubernetes.io/job-name=ml-training-job
+           controller-uid=8741b430-4611-4dfa-b620-d6d361d82238
+           job-name=ml-training-job
+  Containers:
+   trainer:
+    Image:      mlops-train:v1
+    Port:       <none>
+    Host Port:  <none>
+    Limits:
+      cpu:             2
+      memory:          4Gi
+      nvidia.com/gpu:  1
+    Requests:
+      cpu:             2
+      memory:          4Gi
+      nvidia.com/gpu:  1
+    Environment:
+      TRAINING_CONFIG_PATH:  /app/configs/training_config.yaml
+    Mounts:
+      /app/checkpoints from storage-volume (rw,path="checkpoints")
+      /app/configs from config-volume (rw)
+      /app/data from storage-volume (rw,path="data")
+  Volumes:
+   config-volume:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      training-config
+    Optional:  false
+   storage-volume:
+    Type:          PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:     ml-storage-pvc
+    ReadOnly:      false
+  Node-Selectors:  accelerator=nvidia-gpu
+  Tolerations:     nvidia.com/gpu:NoSchedule op=Exists
+Events:            <none>
+
+
+**k8s Deployment**
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl apply -f k8s/serving-deployment.yaml 
+
+deployment.apps/model-serving created
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl describe deployment -n ml-training
+
+Name:                   model-serving
+Namespace:              ml-training
+CreationTimestamp:      Wed, 26 Aug 2026 18:48:45 +0530
+Labels:                 app=model-serving
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=model-serving
+Replicas:               2 desired | 2 updated | 2 total | 0 available | 2 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  0 max unavailable, 1 max surge
+Pod Template:
+  Labels:  app=model-serving
+  Containers:
+   serving-runtime:
+    Image:      mlops-serve:v1
+    Port:       8080/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     1
+      memory:  2Gi
+    Requests:
+      cpu:        500m
+      memory:     1Gi
+    Liveness:     http-get http://:8080/health delay=0s timeout=1s period=10s #success=1 #failure=3    
+    Readiness:    http-get http://:8080/health delay=15s timeout=1s period=5s #success=1 #failure=3    
+    Environment:  <none>
+    Mounts:
+      /app/checkpoints from checkpoint-volume (ro,path="checkpoints")
+  Volumes:
+   checkpoint-volume:
+    Type:          PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:     ml-storage-pvc
+    ReadOnly:      false
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      False   MinimumReplicasUnavailable
+  Progressing    False   ProgressDeadlineExceeded
+OldReplicaSets:  <none>
+NewReplicaSet:   model-serving-64dd4cdcd8 (2/2 replicas created)
+Events:          <none>
+
+
+**k8s Service**
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl apply -f k8s/serving-service.yaml
+
+service/model-serving created
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl describe service -n ml-training   
+
+Name:                     model-serving
+Namespace:                ml-training
+Labels:                   <none>
+Annotations:              <none>
+Selector:                 app=model-serving
+Type:                     ClusterIP
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.96.55.62
+IPs:                      10.96.55.62
+Port:                     <unset>  80/TCP
+TargetPort:               8080/TCP
+Endpoints:
+Session Affinity:         None
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+
+
+**k8s HPA**
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl apply -f k8s/hpa.yaml
+
+horizontalpodautoscaler.autoscaling/model-serving-hpa created
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl describe hpa -n ml-training   
+
+Name:                                                  model-serving-hpa
+Namespace:                                             ml-training
+Labels:                                                <none>
+Annotations:                                           <none>
+CreationTimestamp:                                     Wed, 26 Aug 2026 18:49:35 +0530
+Reference:                                             Deployment/model-serving
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  <unknown> / 80%
+Min replicas:                                          2
+Max replicas:                                          5
+Deployment pods:                                       2 current / 0 desired
+Conditions:
+  Type           Status  Reason                   Message
+  ----           ------  ------                   -------
+  AbleToScale    True    SucceededGetScale        the HPA controller was able to get the target's current scale
+  ScalingActive  False   FailedGetResourceMetric  the HPA was unable to compute the replica count: failed to get cpu utilization: unable to get metrics for resource cpu: unable to fetch metrics from resource metrics API: the server could not find the requested resource (get pods.metrics.k8s.io)
+Events:
+  Type     Reason                   Age                    From                       Message
+  ----     ------                   ----                   ----                       -------
+  Warning  FailedGetResourceMetric  2m14s (x857 over 19h)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: unable to fetch metrics from resource metrics API: the server could not find the requested resource (get pods.metrics.k8s.io)
+
+
+**k8s Running PODS**
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl get pods -n ml-training 
+
+NAME                             READY   STATUS      RESTARTS   AGE
+ml-training-job-zlh88            0/1     Pending     0          19h
+model-serving-64dd4cdcd8-cnfv7   0/1     Pending     0          19h
+model-serving-64dd4cdcd8-hhftw   0/1     Pending     0          19h
+
+
+**k8s Describe Deployment Serving**
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl describe deployment model-serving -n ml-training
+
+Name:                   model-serving
+Namespace:              ml-training
+CreationTimestamp:      Wed, 26 Aug 2026 18:48:45 +0530
+Labels:                 app=model-serving
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=model-serving
+Replicas:               2 desired | 2 updated | 2 total | 0 available | 2 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  0 max unavailable, 1 max surge
+Pod Template:
+  Labels:  app=model-serving
+  Containers:
+   serving-runtime:
+    Image:      mlops-serve:v1
+    Port:       8080/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     1
+      memory:  2Gi
+    Requests:
+      cpu:        500m
+      memory:     1Gi
+    Liveness:     http-get http://:8080/health delay=0s timeout=1s period=10s #success=1 #failure=3    
+    Readiness:    http-get http://:8080/health delay=15s timeout=1s period=5s #success=1 #failure=3    
+    Environment:  <none>
+    Mounts:
+      /app/checkpoints from checkpoint-volume (ro,path="checkpoints")
+  Volumes:
+   checkpoint-volume:
+    Type:          PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:     ml-storage-pvc
+    ReadOnly:      false
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      False   MinimumReplicasUnavailable
+  Progressing    False   ProgressDeadlineExceeded
+OldReplicaSets:  <none>
+NewReplicaSet:   model-serving-64dd4cdcd8 (2/2 replicas created)
+Events:          <none>
+
+
+**k8s Port-Forwarding**
+
+PS C:\Users\nitis\Desktop\mlops-pytorch-pipeline> kubectl port-forward svc/model-serving 8080:80 -n ml-training
+
+error: unable to forward port because pod is not running. Current status=Pending
+
+
+# Challenges Faced
+
+The Most Challenging Part of MLOps Pipeline SetupBuilding a CIFAR-10 classifier (model.py, dataset.py, train.py) is straightforward in a local script environment. 
+
+However, turning that code into a production-ready pipeline exposed the true complexities of MLOps across Git, Docker, and Kubernetes.
+
+1. Managing Container Parity and CUDA BloatPyTorch dependencies are heavy. Splitting dependencies into train.txt and serve.txt helped keep the inference image lean, but aligning the CUDA runtime versions inside Dockerfile.train and Dockerfile.serve was difficult. A small mismatch between the host driver, the container CUDA toolkit, and the PyTorch wheel version caused hardware fallback errors or silent crashes. Tuning multi-stage Docker builds to solve this without creating massive image sizes took careful adjustment.
+
+2. Kubernetes Resource Limits and OOM CrashesMoving workloads into Kubernetes (training-job.yaml and serving-deployment.yaml) introduced strict hardware boundaries. During training, aggressive batch sizes and PyTorch data loaders frequently triggered Out-Of-Memory (OOM) errors when container limits were set too tight. Balancing CPU, memory, and GPU requests alongside environment configurations (configmap.yaml) required extensive testing. Furthermore, setting up the Horizontal Pod Autoscaler (hpa.yaml) for inference (serve.py) demanded precise traffic and load thresholds to prevent latency spikes without wasting cluster resources.
